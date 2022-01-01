@@ -11,8 +11,11 @@ manual installation of Ventoy in BIOS mode. This mode remains perfectly function
 - `core.img.xz` (Ventoy)
 - `VTOYEFI.part.img.xz`
 - `bash` with root access
-- `fdisk`
+- `dd`
 - `exfat-utils` (Debian)
+- `fdisk`
+- `grep`
+- `umount`
 - `util-linux` (Debian)
 - `xz-utils` (Debian)
 
@@ -23,6 +26,7 @@ manual installation of Ventoy in BIOS mode. This mode remains perfectly function
 
 ```console
 TARGET=/dev/todo
+umount $TARGET*
 BLOCKS=$( blockdev --getsz $TARGET )
 fdisk -W always $TARGET <<~~~~~
 o

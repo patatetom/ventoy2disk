@@ -18,7 +18,7 @@ dd if=$TARGET count=1 status=none | dd of=$TARGET status=none
 read -s -p $'\n\e[33m'"[Ctrl]-[C] to interrupt or validate to continue..."$'\e[0m\n'
 
 # determination of the number of sectors
-BLOCKS=$( blockdev --getsz $TARGET )
+BLOCKS=$( sync && blockdev --getsz $TARGET )
 
 # whitening of future partitions (fdisk warnings)
 dd if=/dev/zero of=$TARGET seek=2048 count=4 status=none

@@ -9,7 +9,7 @@ TARGET=${1:?$'\r\e[K'a block device must be given}
 
 # information display and initial confirmation
 echo && lsblk $TARGET
-echo && fdisk -l $TARGET | sed '/^$/d'
+echo && fdisk -l $TARGET | grep -v '^$'
 read -s -p $'\n'"[Ctrl]-[C] to interrupt or validate to continue..."$'\n'
 
 # unmount, read/write test and final confirmation

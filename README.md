@@ -14,7 +14,7 @@ manual installation of Ventoy in BIOS mode. This mode remains perfectly function
 - `dd`
 - `exfat-utils` (Debian)
 - `fdisk`
-- `grep`
+- `grep` (installation script)
 - `umount`
 - `util-linux` (Debian)
 - `xz-utils` (Debian)

@@ -1,0 +1,67 @@
+#!/bin/bash
+
+echo -n $'\e[0m'
+set -e -u -o pipefail
+
+# test of the expected parameter
+TARGET=${1:?$'\r\e[K'a block device must be given}
+[ -b $TARGET ] || { echo "a block device must be given" >/dev/stderr; exit 1; } 
+
+# information display and initial confirmation
+echo && lsblk $TARGET
+echo && fdisk -l $TARGET | sed '/^$/d'
+read -s -p $'\n'"[Ctrl]-[C] to interrupt or validate to continue..."$'\n'
+
+# unmount, read/write test and final confirmation
+grep -q -m 1 ^$TARGET /proc/mounts && umount $( grep -o "^$TARGET[^ ]*" /proc/mounts )
+dd if=$TARGET count=1 status=none | dd of=$TARGET status=none
+read -s -p $'\n\e[33m'"[Ctrl]-[C] to interrupt or validate to continue..."$'\e[0m\n'
+
+# determination of the number of sectors
+BLOCKS=$( blockdev --getsz $TARGET )
+
+# whitening of future partitions (fdisk warnings)
+dd if=/dev/zero of=$TARGET seek=2048 count=4 status=none
+dd if=/dev/zero of=$TARGET seek=$(( BLOCKS - 65536 )) count=4 status=none
+
+# partitioning DOS
+fdisk $TARGET >/dev/null <<~~~~~
+o
+n
+p
+1
+2048
+$(( BLOCKS - 65537 ))
+t
+7
+n
+p
+2
+$(( BLOCKS - 65536 ))
+$(( BLOCKS - 1 ))
+t
+2
+ef
+a
+1
+w
+~~~~~
+
+# rereading of partitions
+blockdev --rereadpt $TARGET
+
+# writing Ventoy files
+dd if=boot.img of=$TARGET bs=1 count=446 status=none
+xzcat core.img.xz | dd of=$TARGET count=2047 seek=1 status=none
+xzcat VTOYEFI.part.img.xz | dd of=$TARGET count=65536 seek=$(( BLOCKS - 65536 )) status=none
+
+# random serial number
+dd if=/dev/urandom of=$TARGET seek=384 bs=1 count=16 status=none
+dd if=/dev/urandom of=$TARGET seek=440 bs=1 count=4 status=none
+
+# formatting the first partition
+mkfs.exfat -n Ventoy ${TARGET}p1 >/dev/null
+
+# end of installation
+sync
+echo $'\n\e[32m'"$TARGET was prepared with Ventoy"$'\e[0m\n'

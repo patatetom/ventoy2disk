@@ -21,11 +21,14 @@ read -s -p $'\n\e[33m'"[Ctrl]-[C] to interrupt or validate to continue..."$'\e[0
 BLOCKS=$( sync && blockdev --getsz $TARGET )
 
 # whitening of future partitions (fdisk warnings)
+echo $'\n'"step 1/5..."
 dd if=/dev/zero of=$TARGET seek=2048 count=4 status=none
 dd if=/dev/zero of=$TARGET seek=$(( BLOCKS - 65536 )) count=4 status=none
 
 # partitioning DOS
-fdisk $TARGET >/dev/null <<~~~~~
+echo "step 2/5..."
+{
+cat <<~~~~~
 o
 n
 p
@@ -46,21 +49,26 @@ a
 1
 w
 ~~~~~
+sleep 2s
+} | fdisk $TARGET >/dev/null
 
 # rereading of partitions
-blockdev --rereadpt $TARGET
+sync && blockdev --rereadpt $TARGET
 
 # writing Ventoy files
+echo "step 3/5..."
 dd if=boot.img of=$TARGET bs=1 count=446 status=none
 xzcat core.img.xz | dd of=$TARGET count=2047 seek=1 status=none
 xzcat VTOYEFI.part.img.xz | dd of=$TARGET count=65536 seek=$(( BLOCKS - 65536 )) status=none
 
 # random serial number
+echo "step 4/5..."
 dd if=/dev/urandom of=$TARGET seek=384 bs=1 count=16 status=none
 dd if=/dev/urandom of=$TARGET seek=440 bs=1 count=4 status=none
 
 # formatting the first partition
-mkfs.exfat -n Ventoy ${TARGET}p1 >/dev/null
+echo "step 5/5..."
+mkfs.exfat -n Ventoy $TARGET$( [ -b ${TARGET}p1 ] && echo p)1 >/dev/null
 
 # end of installation
 sync

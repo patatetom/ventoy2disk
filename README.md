@@ -49,7 +49,6 @@ a
 1
 w
 ~~~~~
-blockdev --rereadpt $TARGET
 ```
 
 

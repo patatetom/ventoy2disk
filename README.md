@@ -28,7 +28,7 @@ manual installation of Ventoy in BIOS mode. This mode remains perfectly function
 TARGET=/dev/todo
 umount $TARGET*
 BLOCKS=$( blockdev --getsz $TARGET )
-fdisk -W always $TARGET <<~~~~~
+fdisk $TARGET <<~~~~~
 o
 n
 p

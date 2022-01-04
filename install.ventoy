@@ -49,11 +49,9 @@ a
 1
 w
 ~~~~~
+sync
 sleep 2s
 } | fdisk $TARGET >/dev/null
-
-# rereading of partitions
-sync && blockdev --rereadpt $TARGET
 
 # writing Ventoy files
 echo "step 3/5..."

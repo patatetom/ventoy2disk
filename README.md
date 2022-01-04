@@ -73,10 +73,10 @@ dd if=/dev/urandom of=$TARGET seek=440 bs=1 count=4
 
 ## ExFAT formatting of the first partition
 
+> depending on the device, the first partition may not named `p1` but simply `1` (for example `/dev/sde1` with `/dev/sde`).
+
 ```console
 lsblk $TARGET
-# adapt the next command with the results of the previous command (see note below)
+# adapt the next command with the results of the previous command (see note above)
 mkfs.exfat -n Ventoy ${TARGET}p1
 ```
-
-> depending on the device, the first partition may not named `p1` but simply `1` (for example `/dev/sde1` with `/dev/sde`).

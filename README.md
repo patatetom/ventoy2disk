@@ -90,12 +90,15 @@ mkfs.exfat -n Ventoy ${TARGET}p1
 # mount Ventoy storage partition
 _from a Linux live system started from Ventoy._
 
+
+## sda
+
 ```console
 $ # switch user (eg. root)
 $ sudo -i
 
 # # list Ventoy USB device
-# lsblk -o+fstype /dev/sda
+# lsblk -o +fstype /dev/sda
 NAME       MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS       FSTYPE
 sda          8:0    1 57,8G  0 disk                   
 ├─sda1       8:1    1 57,7G  0 part                   exfat
@@ -105,7 +108,53 @@ sda          8:0    1 57,8G  0 disk
 # # create mount point
 # mkdir /storage
 
-# try to mount Ventoy storage partition
+# # try to mount Ventoy storage partition
+# mount /dev/sda1 /storage
+mount: /storage: fsconfig system call failed: /dev/sda1: Can't open blockdev.
+       dmesg(1) may have more information after failed mount system call.
+
+# # can't mount Ventoy storage partition because already used
+# lsblk -Q "pkname=='sda1'"
+NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
+ventoy 254:0    0  3,7G  1 dm   /run/miso/bootmnt
+
+# # get first sector and sector size of Ventoy storage partition
+# lsblk -n -o start,log-sec /dev/sda1 
+2048     512
+
+# # mount Ventoy storage partition from device with offset option
+# mount -o offset=$((2048*512)) /dev/sda /storage
+# exit
+
+
+$ # play with your Ventoy storage partition (eg. /storage)...
+
+
+$ # unmount storage
+$ sudo -i
+# umount /storage
+# exit
+```
+
+
+## nbd
+
+```console
+$ # switch user (eg. root)
+$ sudo -i
+
+# # list Ventoy USB device
+# lsblk -o +fstype /dev/sda
+NAME       MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS       FSTYPE
+sda          8:0    1 57,8G  0 disk                   
+├─sda1       8:1    1 57,7G  0 part                   exfat
+│ └─ventoy 254:0    0  3,7G  1 dm   /run/miso/bootmnt iso9660
+└─sda2       8:2    1   32M  0 part                   vfat
+
+# # create mount point
+# mkdir /storage
+
+# # try to mount Ventoy storage partition
 # mount /dev/sda1 /storage
 mount: /storage: fsconfig system call failed: /dev/sda1: Can't open blockdev.
        dmesg(1) may have more information after failed mount system call.
@@ -141,3 +190,5 @@ $ sudo -i
 # qemu-nbd -d /dev/nbd0
 # exit
 ```
+
+> nbd snapshot mode can be used if required (`qemu-nbd -s -c /dev/nbd0 /dev/sda`)

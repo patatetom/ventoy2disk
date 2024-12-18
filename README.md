@@ -91,12 +91,9 @@ mkfs.exfat -n Ventoy ${TARGET}p1
 _from a Linux live system started from Ventoy._
 
 
-## sda
+## issue
 
 ```console
-$ # switch user (eg. root)
-$ sudo -i
-
 # # list Ventoy USB device
 # lsblk -o +fstype /dev/sda
 NAME       MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS       FSTYPE
@@ -117,78 +114,56 @@ mount: /storage: fsconfig system call failed: /dev/sda1: Can't open blockdev.
 # lsblk -Q "pkname=='sda1'"
 NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
 ventoy 254:0    0  3,7G  1 dm   /run/miso/bootmnt
+```
 
+
+## sda
+
+```console
 # # get first sector and sector size of Ventoy storage partition
 # lsblk -n -o start,log-sec /dev/sda1 
 2048     512
 
-# # mount Ventoy storage partition from device with offset option
-# mount -o offset=$((2048*512)) /dev/sda /storage
-# exit
+# # mount Ventoy storage partition from USB device
+# # with offset option and uid 1000 (default live user)
+# mount -o offset=$((2048*512)) /dev/sda /storage -o uid=1000
+```
 
 
-$ # play with your Ventoy storage partition (eg. /storage)...
+## loop
 
+> the most simple ;-)
 
-$ # unmount storage
-$ sudo -i
-# umount /storage
-# exit
+```console
+# # insert kernel module (just in case)
+# modprobe loop
+
+# # get fisrt available loop device
+# losetup -f
+/dev/loop4
+
+# # attach Ventoy storage partition to first available loop device
+# losetup -f /dev/sda1
+
+# # mount loop4 (eg. sda1) with uid 1000 (default live user)
+# mount /dev/loop4 /storage -o uid=1000
 ```
 
 
 ## nbd
 
+> nbd snapshot mode can be used if required (`qemu-nbd -s -c /dev/nbd0 /dev/sda`)
+
 ```console
-$ # switch user (eg. root)
-$ sudo -i
-
-# # list Ventoy USB device
-# lsblk -o +fstype /dev/sda
-NAME       MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS       FSTYPE
-sda          8:0    1 57,8G  0 disk                   
-├─sda1       8:1    1 57,7G  0 part                   exfat
-│ └─ventoy 254:0    0  3,7G  1 dm   /run/miso/bootmnt iso9660
-└─sda2       8:2    1   32M  0 part                   vfat
-
-# # create mount point
-# mkdir /storage
-
-# # try to mount Ventoy storage partition
-# mount /dev/sda1 /storage
-mount: /storage: fsconfig system call failed: /dev/sda1: Can't open blockdev.
-       dmesg(1) may have more information after failed mount system call.
-
-# # can't mount Ventoy storage partition because already used
-# lsblk -Q "pkname=='sda1'"
-NAME   MAJ:MIN RM  SIZE RO TYPE MOUNTPOINTS
-ventoy 254:0    0  3,7G  1 dm   /run/miso/bootmnt
-
 # # insert "magic" nbd kernel module
 # modprobe nbd
 
 # # install qemu-nbd if not provided by the used Linux live distribution
 # # (apt install qemu-utils # for example on Debian)
-# # connect sda with nbd0
+# # connect sda with nbd0 (snapshot mode available)
 # qemu-nbd -c /dev/nbd0 /dev/sda
 WARNING: Image format was not specified for '/dev/sda' and probing guessed raw.
 
 # # mount nbd0p1 (eg. sda1) with uid 1000 (default live user)
 # mount /dev/nbd0p1 /storage -o uid=1000
-# exit
-
-
-$ # play with your Ventoy storage partition (eg. /storage) :
-$ # save your downloads,
-$ # edit your files,
-$ # etc..
-
-
-$ # unmount everything
-$ sudo -i
-# umount /storage
-# qemu-nbd -d /dev/nbd0
-# exit
 ```
-
-> nbd snapshot mode can be used if required (`qemu-nbd -s -c /dev/nbd0 /dev/sda`)

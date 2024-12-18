@@ -120,13 +120,13 @@ ventoy 254:0    0  3,7G  1 dm   /run/miso/bootmnt
 ## sda
 
 ```console
-# # get first sector and sector size of Ventoy storage partition
-# lsblk -n -o start,log-sec /dev/sda1 
-2048     512
+# # get first sector, sector size and size of Ventoy storage partition
+# lsblk -n -b -o start,log-sec,size /dev/sda1 
+2048     512 61973987328
 
-# # mount Ventoy storage partition from USB device
-# # with offset option and uid 1000 (default live user)
-# mount -o offset=$((2048*512)) /dev/sda /storage -o uid=1000
+# # mount Ventoy storage partition from USB device with
+# # offset, size limit and uid 1000 (default live user)
+# mount -o offset=$((2048*512)),sizelimit=61973987328,uid=1000 /dev/sda /storage
 ```
 
 
@@ -146,7 +146,7 @@ ventoy 254:0    0  3,7G  1 dm   /run/miso/bootmnt
 # losetup -f /dev/sda1
 
 # # mount loop4 (eg. sda1) with uid 1000 (default live user)
-# mount /dev/loop4 /storage -o uid=1000
+# mount -o uid=1000 /dev/loop4 /storage
 ```
 
 
@@ -165,5 +165,5 @@ ventoy 254:0    0  3,7G  1 dm   /run/miso/bootmnt
 WARNING: Image format was not specified for '/dev/sda' and probing guessed raw.
 
 # # mount nbd0p1 (eg. sda1) with uid 1000 (default live user)
-# mount /dev/nbd0p1 /storage -o uid=1000
+# mount -o uid=1000 /dev/nbd0p1 /storage
 ```
